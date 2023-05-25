@@ -3,6 +3,7 @@ using AspNetCoreIdentityApp.Web.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using AspNetCoreIdentityApp.Web.Extensions;
 
 namespace AspNetCoreIdentityApp.Web.Controllers
 {
@@ -45,9 +46,23 @@ namespace AspNetCoreIdentityApp.Web.Controllers
         {
             returnUrl = returnUrl ?? Url.Action("Index", "Home"); // eger returnUrl null dursa Url.Action ishleyecek.
 
-            var result = await _signInManager.PasswordSignInAsync()
+            var hasUser = await _UserManager.FindByEmailAsync(model.Email);
 
+            if(hasUser == null)
+            {
+                ModelState.AddModelError(string.Empty, "Email ve ya shifre yanlish");
+                return View();
+            }
+            var signInResult = await _signInManager.PasswordSignInAsync(hasUser, model.Password, model.RememberMe, false);
 
+            if (signInResult.Succeeded)
+            {
+                return Redirect(returnUrl);
+            }
+
+            ModelState.AddModelErrorList(new List<string>() { "Email veya shifre yanlish" });
+
+            return View();
         }
 
         [HttpPost]
@@ -66,12 +81,15 @@ namespace AspNetCoreIdentityApp.Web.Controllers
                 return RedirectToAction(nameof(HomeController.SignUp));
             }
 
-            foreach (IdentityError item in identityResult.Errors)
-            {
-                ModelState.AddModelError(string.Empty, item.Description);
-            }
+            ModelState.AddModelErrorList(identityResult.Errors.Select(x=>x.Description).ToList());
+
             return View();
         }
+
+
+
+
+
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
