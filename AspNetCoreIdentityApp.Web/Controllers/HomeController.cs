@@ -32,7 +32,6 @@ namespace AspNetCoreIdentityApp.Web.Controllers
 
         public IActionResult SignUp()
         {
-
             return View();
         }
 
@@ -53,14 +52,20 @@ namespace AspNetCoreIdentityApp.Web.Controllers
                 ModelState.AddModelError(string.Empty, "Email ve ya shifre yanlish");
                 return View();
             }
-            var signInResult = await _signInManager.PasswordSignInAsync(hasUser, model.Password, model.RememberMe, false);
+            var signInResult = await _signInManager.PasswordSignInAsync(hasUser, model.Password, model.RememberMe, true);
 
             if (signInResult.Succeeded)
             {
                 return Redirect(returnUrl);
             }
 
-            ModelState.AddModelErrorList(new List<string>() { "Email veya shifre yanlish" });
+            if (signInResult.IsLockedOut)
+            {
+                ModelState.AddModelErrorList(new List<string>() { "3 dakika boyunca girish yapamazsiniz" });
+                return View();
+            }
+
+            ModelState.AddModelErrorList(new List<string>() { $"Email veya shifre yanlish", $"Basharisiz girish sayisi = {await _UserManager.GetAccessFailedCountAsync(hasUser)}" });
 
             return View();
         }

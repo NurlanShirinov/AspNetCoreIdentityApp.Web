@@ -14,6 +14,25 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddIdentityWithExt();
 
+builder.Services.ConfigureApplicationCookie(opt =>
+{
+    // ilk once bir cookie yaradiriq.
+    var cookieBuilder = new CookieBuilder(); 
+    cookieBuilder.Name = "AppCookie";
+
+    //Sonra signin seyfesinin pathin veririk
+    opt.LoginPath = new PathString("/Home/SignIn");
+    opt.LogoutPath = new PathString("/Member/logout");
+    opt.Cookie= cookieBuilder;
+
+    // Biz cookie 60 gun vaxt verdik 60 gun kompda saxliyaciyiq. 
+    opt.ExpireTimeSpan = TimeSpan.FromDays(60);
+
+    opt.SlidingExpiration = true;
+    //SlidingExpiration o dur ki eger 30cu gunde istifadeci yene daxil olsa
+    //yeniden 60 gun olur cookinin omru
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -30,6 +49,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(

@@ -13,17 +13,16 @@
         </div>
 
 
-        <form asp-controller="Home" asp-action="SignIn" method="post">
+        <form asp-controller="Home" asp-action="SignIn" asp-route-returnUrl ="@Context.Request.Query["returnURL"]" method="post">
             <div class="mb-3">
                 <label for="exampleInputEmail1" class="form-label" asp-for="Email"></label>
-                <input class="form-control" asp-for="Email">
+                <input value="f-cakiroglu17@outlook.com" class="form-control" asp-for="Email">
                 <span class="text-danger" asp-validation-for="Email"></span>
 
             </div>
             <div class="mb-3">
                 <label for="Password" class="form-label" asp-for="Password"></label>
-                <input type="password" class="form-control" asp-for="Password">
-                @*<span class="text-danger" asp-validation-for="Password"></span>*@
+                <input value="Password12*" type="password" class="form-control" asp-for="Password">
 
             </div>
             <div class="mb-3 form-check">
