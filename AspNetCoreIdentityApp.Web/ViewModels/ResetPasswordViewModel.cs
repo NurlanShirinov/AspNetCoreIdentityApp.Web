@@ -1,0 +1,18 @@
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace AspNetCoreIdentityApp.Web.ViewModels
+{
+    public class ResetPasswordViewModel
+    {
+        [Required(ErrorMessage = "Password alanı boş bırakılamaz")]
+        [Display(Name = "New Password")]
+        public string Password { get; set; }
+
+
+        [DataType(DataType.Password)]
+        [Compare(nameof(Password), ErrorMessage = "Shifre ayni deyildir")]
+        [Required(ErrorMessage = "Password repeat alanı boş bırakılamaz")]
+        [Display(Name = "Repeat Password")]
+        public string PasswordConfirm { get; set; }
+    }
+}

@@ -19,11 +19,14 @@ namespace AspNetCoreIdentityApp.Web.ViewModels
         [Display(Name = "Email : ")]
         public string Email { get; set; }
 
+
+        [DataType(DataType.Password)]
+
         [Required(ErrorMessage = "Password alanı boş bırakılamaz")]
-        [Display(Name = "Shifre : ")]
+        [Display(Name = "Shifre :")]
         public string Password { get; set; }
 
-        [Display(Name = "Remember me : ")]
+        [Display(Name = "Remember me")]
         public bool RememberMe { get; set; }
     }
 }

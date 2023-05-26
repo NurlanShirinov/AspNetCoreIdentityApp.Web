@@ -2,6 +2,12 @@
     ViewData["Title"] = "SignIn";
 }
 @model SignInViewModel
+@section Scripts{
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+
+}
+
+
 
 <div class="row">
     <div class="col-md-4 offset-md-4">
@@ -14,7 +20,7 @@
 
 
 
-        <form asp-controller="Home" asp-action="SignIn" asp-route-returnUrl ="@Context.Request.Query["returnURL"]" method="post">
+        <form asp-controller="Home" asp-action="SignIn" asp-route-returnUrl="@Context.Request.Query["returnURL"]" method="post">
             <div class="mb-3">
                 <label for="exampleInputEmail1" class="form-label" asp-for="Email"></label>
                 <input value="f-cakiroglu17@outlook.com" class="form-control" asp-for="Email">
@@ -26,11 +32,23 @@
                 <input value="Password12*" type="password" class="form-control" asp-for="Password">
 
             </div>
-            <div class="mb-3 form-check">
-                <input type="checkbox" class="form-check-input" asp-for="RememberMe">
-                <label class="form-check-label" for="RememberMe" asp-for="RememberMe"></label>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" asp-for="RememberMe">
+                        <label class="form-check-label" for="RememberMe" asp-for="RememberMe"></label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <a class="btn btn-outline-secondary btn-sm float-end" asp-controller="Home" asp-action="ForgetPassword">Forget Password</a>
+
+                </div>
             </div>
+
             <button type="submit" class="btn btn-primary">Submit</button>
+            <div>
+            </div>
         </form>
 
 

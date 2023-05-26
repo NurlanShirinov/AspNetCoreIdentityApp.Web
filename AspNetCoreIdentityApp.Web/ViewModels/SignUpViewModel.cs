@@ -32,11 +32,13 @@ namespace AspNetCoreIdentityApp.Web.ViewModels
         [Display(Name = "Phone : ")]
         public string Phone { get; set; }
 
+        [DataType(DataType.Password)]
         [Required(ErrorMessage = "Password alanı boş bırakılamaz")]
         [Display(Name = "Shifre : ")]
         public string Password { get; set; }
 
 
+        [DataType(DataType.Password)]
         [Compare(nameof(Password), ErrorMessage ="Shifre ayni deyildir")]
         [Required(ErrorMessage = "Password repeat alanı boş bırakılamaz")]
         [Display(Name = "Shifre Tekrar: ")]
