@@ -8,7 +8,7 @@ namespace AspNetCoreIdentityApp.Web.CustomValidations
         public Task<IdentityResult> ValidateAsync(UserManager<AppUser> manager, AppUser user)
         {
             var errors = new List<IdentityError>();
-            var isDigit = int.TryParse(user.UserName[0]!.ToString(), out _); // bu codda olan _ simvolu discartdir. yeni normalda bu kodda onun yerinde result olmali idi lakin userin adi reqemle bashladigi halda bize lazim oldamigi ucun bele yazdiq.
+            var isDigit = int.TryParse(user.UserName![0].ToString(), out _); // bu codda olan _ simvolu discartdir. yeni normalda bu kodda onun yerinde result olmali idi lakin userin adi reqemle bashladigi halda bize lazim oldamigi ucun bele yazdiq.
 
             if (isDigit)
             {

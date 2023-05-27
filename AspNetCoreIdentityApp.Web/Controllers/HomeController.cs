@@ -46,7 +46,12 @@ namespace AspNetCoreIdentityApp.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> SignIn(SignInViewModel model, string? returnUrl = null)
         {
-            returnUrl = returnUrl ?? Url.Action("Index", "Home"); // eger returnUrl null dursa Url.Action ishleyecek.
+            if (!ModelState.IsValid)
+            {
+                return View();
+            }
+
+            returnUrl ??= Url.Action("Index", "Home"); // eger returnUrl null dursa Url.Action ishleyecek.
 
             var hasUser = await _UserManager.FindByEmailAsync(model.Email);
 
@@ -104,7 +109,7 @@ namespace AspNetCoreIdentityApp.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> ForgetPassword(ForgetPasswordViewModel request)
         {
-            var hasUser = await _UserManager.FindByEmailAsync(request.Email);
+            var hasUser = await _UserManager.FindByEmailAsync(request.Email!);
 
             if (hasUser == null)
             {
@@ -135,15 +140,15 @@ namespace AspNetCoreIdentityApp.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> ResetPassword(ResetPasswordViewModel request)
         {
-            string? userId = TempData["userId"].ToString();
-            string? token = TempData["token"].ToString();
+            var userId = TempData["userId"];
+            var token = TempData["token"];
 
             if(userId == null || token == null)
             {
                 throw new Exception("The Error occured!");
             }
 
-            var hasUser = await _UserManager.FindByIdAsync(userId);
+            var hasUser = await _UserManager.FindByIdAsync(userId.ToString()!);
 
             if (hasUser == null)
             {
@@ -151,7 +156,7 @@ namespace AspNetCoreIdentityApp.Web.Controllers
                 return View();
             }
 
-            var result = await _UserManager.ResetPasswordAsync(hasUser,(string)token, request.Password);
+            var result = await _UserManager.ResetPasswordAsync(hasUser,token.ToString()!, request.Password);
 
             if (result.Succeeded)
             {
