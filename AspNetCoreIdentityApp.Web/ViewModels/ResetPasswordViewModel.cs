@@ -6,7 +6,7 @@ namespace AspNetCoreIdentityApp.Web.ViewModels
     {
         [Required(ErrorMessage = "Password alanı boş bırakılamaz")]
         [Display(Name = "New Password")]
-        public string Password { get; set; }
+        public string Password { get; set; } = null!;
 
 
         [DataType(DataType.Password)]

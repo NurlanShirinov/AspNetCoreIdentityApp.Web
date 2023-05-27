@@ -4,6 +4,7 @@ using AspNetCoreIdentityApp.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace AspNetCoreIdentityApp.Web.Controllers
 {
@@ -51,18 +52,18 @@ namespace AspNetCoreIdentityApp.Web.Controllers
                 return View();
             }
 
-            var currentUser = await _userManager.FindByNameAsync(User.Identity!.Name!);
+            var currentUser = (await _userManager.FindByNameAsync(User.Identity!.Name!))!;
 
             var checkOldPassword = await _userManager.CheckPasswordAsync(currentUser, request.PasswordOld);
 
             if (!checkOldPassword)
             {
-                ModelState.AddModelError(string.Empty, "Old Pssword is wrong")
-;            }
+                ModelState.AddModelError(string.Empty, "Old Pssword is wrong");
+            }
 
-            var resultChangePassword = await _userManager.ChangePasswordAsync(currentUser, request.PasswordOld,request.PasswordNew);
+            var resultChangePassword = await _userManager.ChangePasswordAsync(currentUser, request.PasswordOld, request.PasswordNew);
 
-            if(!resultChangePassword.Succeeded)
+            if (!resultChangePassword.Succeeded)
             {
                 ModelState.AddModelErrorList(resultChangePassword.Errors.Select(x => x.Description).ToList());
                 return View();
@@ -70,12 +71,33 @@ namespace AspNetCoreIdentityApp.Web.Controllers
 
             await _userManager.UpdateSecurityStampAsync(currentUser); //password deyishdiyi ucun SecuritySamp i update etmeliyik
             await _signInManager.SignOutAsync(); // Parolu deyishdikden sonra yeniden saxil olmasi ucun signout edirik.
-            await _signInManager.PasswordSignInAsync(currentUser,request.PasswordNew,true,false); //burda ise yeni passwordu daxil olma passwordu teyin edirik.
-
+            await _signInManager.PasswordSignInAsync(currentUser, request.PasswordNew, true, false); //burda ise yeni passwordu daxil olma passwordu teyin edirik.
 
             TempData["SuccessMessage"] = "Password change successfully!";
 
             return View();
         }
+
+
+        public async Task<IActionResult> UserEdit()
+        {
+            ViewBag.genderList = new SelectList(Enum.GetNames(typeof(Gender))); //Gender enum dan datalari aliriq
+
+
+            var currentUser = (await _userManager.FindByNameAsync(User.Identity!.Name!))!;
+
+            var userEditViewModel = new UserEditViewModel()
+            {
+                UserName = currentUser.UserName!,
+                Email = currentUser.Email!,
+                Phone = currentUser.PhoneNumber!,
+                BirthDate = currentUser.BirthDate,
+                City = currentUser.City,
+                Gender = currentUser.Gender,
+            };
+
+            return View(userEditViewModel);
+        }
+
     }
 }

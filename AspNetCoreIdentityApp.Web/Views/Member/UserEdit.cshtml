@@ -1,0 +1,102 @@
+﻿@{
+    ViewData["Title"] = "UserEdit";
+}
+@model UserEditViewModel
+
+
+@*ashagida olan scripts kodu Layout faylinda @await RenderSectionAsync("Scripts", required: false) kodundan gelir. Formda her hansisa olan uygnsuzlugu aninda gosderir*@
+@section Scripts{
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+
+}
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <h2>User Edit</h2>
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-info" role="alert">
+                @TempData["SuccessMessage"]
+            </div>
+        }
+
+        @*burda hazir validationlar identityResultdan gelir meselen user adi artiq var password en azi bir reqem olmalidir ve s. *@
+        <div asp-validation-summary=ModelOnly class="alert alert-danger" role="alert">
+        </div>
+
+                                                                         @*bu form shekil alacagi ucun enctytype "multipart/form-data" olur*@
+
+        <form asp-controller="Member" asp-action="UserEdit" method="post" enctype="multipart/form-data">
+
+
+            <div class="row mb-3">
+                <label for="UserName" class="col-md-4 col-form-label" asp-for="UserName"></label>
+                <div class="col-md-8">
+                    <input asp-for="UserName" class="form-control">
+                    <span class="text-danger" asp-validation-for="UserName"></span>
+                </div>
+            </div>
+
+
+            <div class="row mb-3">
+                <label for="Email" class="col-md-4 col-form-label" asp-for="Email"></label>
+                <div class="col-md-8">
+                    <input asp-for="Email" class="form-control">
+                    <span class="text-danger" asp-validation-for="Email"></span>
+                </div>
+            </div>
+
+
+            <div class="row mb-3">
+                <label for="Phone" class="col-md-4 col-form-label" asp-for="Phone"></label>
+                <div class="col-md-8">
+                    <input asp-for="Phone" class="form-control">
+                    <span class="text-danger" asp-validation-for="Phone"></span>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label for="BirthDate" class="col-md-4 col-form-label" asp-for="BirthDate"></label>
+                <div class="col-md-8">
+                    <input asp-for="BirthDate" class="form-control">
+                    <span class="text-danger" asp-validation-for="BirthDate"></span>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label for="City" class="col-md-4 col-form-label" asp-for="City"></label>
+                <div class="col-md-8">
+                    <input asp-for="City" class="form-control">
+                    <span class="text-danger" asp-validation-for="City"></span>
+                </div>
+            </div>
+
+
+            <div class="row mb-3">
+                <label for="Gender" class="col-md-4 col-form-label" asp-for="Gender"></label>
+                <div class="col-md-8">
+                    <select class="form-control" asp-for="Gender" asp-items="ViewBag.genderList">
+                        <option value="">Gender</option>
+
+                    </select>
+                    <span class="text-danger" asp-validation-for="Gender"></span>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label for="Picture" class="col-md-4 col-form-label" asp-for="Picture"></label>
+                <div class="col-md-8">
+                    <input class="form-control" type="file" asp-for="Picture" />
+                    <span class="text-danger" asp-validation-for="Picture"></span>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-8 offset-md-4">
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </div>
+            </div>
+
+        </form>
+    </div>
+</div>
