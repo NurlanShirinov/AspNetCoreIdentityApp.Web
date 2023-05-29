@@ -20,15 +20,27 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-white" asp-area="Admin" asp-controller="Home" asp-action="Index">Admin Anasayfa</a>
+                            <a class="nav-link text-white" asp-area="Admin" asp-controller="Home" asp-action="Index">Admin homepage</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-white" asp-area="Admin" asp-controller="Home" asp-action="UserList">Üye Listesi</a>
+                            <a class="nav-link text-white" asp-area="Admin" asp-controller="Home" asp-action="UserList">User list</a>
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Index">Anasayfaya dön</a>
+                            <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Index">Go homepage</a>
                         </li>
+
+                        <li class="nav-item dropdown ">
+                            <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Roles
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-area="Admin" asp-controller="Roles" asp-action="Index">All Roles</a></li>
+                                
+                            </ul>
+                        </li>
+
+
                     </ul>
                 </div>
 
