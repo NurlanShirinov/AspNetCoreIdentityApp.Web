@@ -82,7 +82,6 @@ namespace AspNetCoreIdentityApp.Web.Controllers
             return View();
         }
 
-
         public async Task<IActionResult> UserEdit()
         {
             ViewBag.genderList = new SelectList(Enum.GetNames(typeof(Gender))); //Gender enum dan datalari aliriq
@@ -165,6 +164,31 @@ namespace AspNetCoreIdentityApp.Web.Controllers
             };
 
             return View(userEditViewModel);
+        }
+
+        public async Task<IActionResult> AccessDenied(string ReturnUrl)
+        {
+            string message = string.Empty;
+
+            message = "Bu sayfayi gormye yetkiniz yokdur. Yetki almak icin yoneticiniz ile gorushe bilirsiniz";
+
+            ViewBag.message = message;
+
+            return View();
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> Claims()
+        {
+            var userClaimList =  User.Claims.Select(x => new ClaimViewModel()
+            {
+                Issuer = x.Issuer,
+                Type = x.Type,
+                Value = x.Value
+            }).ToList();
+
+            return View(userClaimList);
         }
     }
 }

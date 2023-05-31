@@ -45,6 +45,7 @@ builder.Services.ConfigureApplicationCookie(opt =>
     //Sonra signin seyfesinin pathin veririk
     opt.LoginPath = new PathString("/Home/SignIn");
     opt.LogoutPath = new PathString("/Member/logout");
+    opt.AccessDeniedPath = new PathString("/Member/AccessDenied");
     opt.Cookie= cookieBuilder;
 
     // Biz cookie 60 gun vaxt verdik 60 gun kompda saxliyaciyiq. 
