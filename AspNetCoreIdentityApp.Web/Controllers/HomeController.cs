@@ -6,6 +6,7 @@ using System.Diagnostics;
 using AspNetCoreIdentityApp.Web.Extensions;
 using AspNetCoreIdentityApp.Web.Services;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
 
 namespace AspNetCoreIdentityApp.Web.Controllers
 {
@@ -61,6 +62,8 @@ namespace AspNetCoreIdentityApp.Web.Controllers
                 ModelState.AddModelError(string.Empty, "Email ve ya shifre yanlish");
                 return View();
             }
+
+
 
             var signInResult = await _signInManager.PasswordSignInAsync(hasUser, model.Password, model.RememberMe, true);
 
