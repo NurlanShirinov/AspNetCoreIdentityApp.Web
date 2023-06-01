@@ -1,12 +1,17 @@
+using AspNetCoreIdentityApp.Web.ClaimProvider;
 using AspNetCoreIdentityApp.Web.Extensions;
 using AspNetCoreIdentityApp.Web.Models;
 using AspNetCoreIdentityApp.Web.OptionsModels;
+using AspNetCoreIdentityApp.Web.Requirements;
 using AspNetCoreIdentityApp.Web.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
+using static AspNetCoreIdentityApp.Web.Requirements.ViolenceRequirement;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,8 +29,6 @@ builder.Services.Configure<SecurityStampValidatorOptions>(options =>
     options.ValidationInterval = TimeSpan.FromMinutes(30);
 });
 
-
-
 // bu en bestpractice olan variantdir.Eger men solutionda olan her hansisa foldere catmaq
 //isdeyiremse burda tanimladigim IFolderi catmaq isdediyim folderde de tanimlamagim lazimdir.
 builder.Services.AddSingleton<IFileProvider>(new PhysicalFileProvider(Directory.GetCurrentDirectory()));
@@ -34,7 +37,30 @@ builder.Services.AddSingleton<IFileProvider>(new PhysicalFileProvider(Directory.
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddIdentityWithExt();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IClaimsTransformation, UserClaimProvider>();
+builder.Services.AddScoped<IAuthorizationHandler, ExchangeExpireRequirementHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, ViolenceRequirementHandler>();
 
+
+//Claim based Authorization Policy uzerinden aparilir. Policyler ashagidaki kimi add olunur.
+builder.Services.AddAuthorization(options =>
+{
+    //yalniz ankara sheheri olan istifadeciler gire biler bu seyfelere.
+    options.AddPolicy("AnkaraPolicy", policy =>
+    {
+        policy.RequireClaim("city", "ankara");
+    });
+
+    options.AddPolicy("ExchangePolicy", policy =>
+    {
+        policy.AddRequirements(new ExchangeExpireRequirement());
+    });
+
+    options.AddPolicy("ViolencePolicy", policy =>
+    {
+        policy.AddRequirements(new ViolenceRequirement() {TresholdAge = 18});
+    });
+});
 
 builder.Services.ConfigureApplicationCookie(opt =>
 {
@@ -70,7 +96,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
- 
+
 app.UseAuthentication();
 app.UseAuthorization();
 

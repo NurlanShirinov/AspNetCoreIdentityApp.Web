@@ -14,11 +14,25 @@ namespace AspNetCoreIdentityApp.Web.ClaimProvider
             _userManaManager = userManaManager;
         }
 
+
         public async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
         {
+            var identityUser = principal.Identity as ClaimsIdentity;
+            var currentUser = await _userManaManager.FindByNameAsync(identityUser!.Name!);
 
-            var identity = principal.Identity as ClaimsIdentity
-            var currentUser = await _userManaManager.FindByNameAsync(principal.Identity);
+            if (String.IsNullOrEmpty(currentUser.City))
+            {
+                return principal;
+            }
+
+            if (principal.HasClaim(x => x.Type != "city"))
+            {
+                Claim cityClaim = new Claim("city", currentUser.City);
+
+                identityUser.AddClaim(cityClaim); // burda userin sherin databasede claim table yazmiriq cunki user artiq bu datani oz tablesinde saxlayir. Biz bunu cookie nin icine add edirik.
+            }
+
+            return principal;
         }
     }
 }

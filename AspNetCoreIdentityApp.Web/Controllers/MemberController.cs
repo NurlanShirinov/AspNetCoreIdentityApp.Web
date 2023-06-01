@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.FileProviders;
+using System.Collections.Generic;
+using System.Security.Claims;
 
 namespace AspNetCoreIdentityApp.Web.Controllers
 {
@@ -149,7 +151,15 @@ namespace AspNetCoreIdentityApp.Web.Controllers
 
             await _userManager.UpdateSecurityStampAsync(currentUser); //Deyishiklikler oldugu ucun SecurityStamp deyishirik
             await _signInManager.SignOutAsync();
-            await _signInManager.SignInAsync(currentUser, true);
+
+            if (request.BirthDate.HasValue)
+            {
+                await _signInManager.SignInWithClaimsAsync(currentUser, true, new[] { new Claim("birthdate", currentUser.BirthDate.Value.ToString()) });
+            }
+            else
+            {
+                await _signInManager.SignInAsync(currentUser, true);
+            }
 
             TempData["SuccessMessage"] = "User info changed successfully!";
 
@@ -165,7 +175,6 @@ namespace AspNetCoreIdentityApp.Web.Controllers
 
             return View(userEditViewModel);
         }
-
         public async Task<IActionResult> AccessDenied(string ReturnUrl)
         {
             string message = string.Empty;
@@ -177,11 +186,10 @@ namespace AspNetCoreIdentityApp.Web.Controllers
             return View();
         }
 
-
         [HttpGet]
-        public async Task<IActionResult> Claims()
+        public IActionResult Claims()
         {
-            var userClaimList =  User.Claims.Select(x => new ClaimViewModel()
+            var userClaimList = User.Claims.Select(x => new ClaimViewModel()
             {
                 Issuer = x.Issuer,
                 Type = x.Type,
@@ -190,5 +198,31 @@ namespace AspNetCoreIdentityApp.Web.Controllers
 
             return View(userClaimList);
         }
+
+        [Authorize(Policy = "AnkaraPolicy")]
+        [HttpGet]
+        public IActionResult AnkaraPage()
+        {
+            return View();
+        }
+
+        [Authorize(Policy = "ExchangePolicy")]
+        [HttpGet]
+        public IActionResult ExchangePage()
+        {
+            return View();
+        }
+
+
+
+
+        [Authorize(Policy = "ViolencePolicy")]
+        [HttpGet]
+        public IActionResult ViolencePage()
+        {
+            return View();
+        }
+
+
     }
 }
