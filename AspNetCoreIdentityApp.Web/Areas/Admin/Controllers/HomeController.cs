@@ -1,11 +1,12 @@
 ﻿using AspNetCoreIdentityApp.Web.Areas.Admin.Models;
-using AspNetCoreIdentityApp.Web.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using AspNetCoreIdentityApp.Core.Models;
+using AspNetCoreIdentityApp.Repository.Models;
 
-namespace AspNetCoreIdentityApp.Web.Areas.Admin.Controllers
+namespace AspNetCoreIdentityApp.Core.Areas.Admin.Controllers
 {
     [Authorize(Roles ="admin")]
     [Area("Admin")]

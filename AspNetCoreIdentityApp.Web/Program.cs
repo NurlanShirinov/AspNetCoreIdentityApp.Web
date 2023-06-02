@@ -1,11 +1,10 @@
 using AspNetCoreIdentityApp.Web.ClaimProvider;
 using AspNetCoreIdentityApp.Web.Extensions;
-using AspNetCoreIdentityApp.Web.Models;
-using AspNetCoreIdentityApp.Web.OptionsModels;
+using AspNetCoreIdentityApp.Core.OptionsModels;
 using AspNetCoreIdentityApp.Web.PermissionsRoot;
 using AspNetCoreIdentityApp.Web.Requirements;
 using AspNetCoreIdentityApp.Web.Seeds;
-using AspNetCoreIdentityApp.Web.Services;
+using AspNetCoreIdentityApp.Service.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -14,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using static AspNetCoreIdentityApp.Web.Requirements.ViolenceRequirement;
+using AspNetCoreIdentityApp.Repository.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,7 +22,10 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("SqlCon"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("SqlCon"), options =>
+    {
+        options.MigrationsAssembly("AspNetCoreIdentityApp.Repository");
+    });
 });
 
 builder.Services.Configure<SecurityStampValidatorOptions>(options =>
@@ -41,7 +44,7 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IClaimsTransformation, UserClaimProvider>();
 builder.Services.AddScoped<IAuthorizationHandler, ExchangeExpireRequirementHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, ViolenceRequirementHandler>();
-
+builder.Services.AddScoped<IMemberService, MemberService>();
 
 //Claim based Authorization Policy uzerinden aparilir. Policyler ashagidaki kimi add olunur.
 builder.Services.AddAuthorization(options =>
@@ -88,14 +91,14 @@ builder.Services.AddAuthorization(options =>
 builder.Services.ConfigureApplicationCookie(opt =>
 {
     // ilk once bir cookie yaradiriq.
-    var cookieBuilder = new CookieBuilder(); 
+    var cookieBuilder = new CookieBuilder();
     cookieBuilder.Name = "AppCookie";
 
     //Sonra signin seyfesinin pathin veririk
     opt.LoginPath = new PathString("/Home/SignIn");
     opt.LogoutPath = new PathString("/Member/logout");
     opt.AccessDeniedPath = new PathString("/Member/AccessDenied");
-    opt.Cookie= cookieBuilder;
+    opt.Cookie = cookieBuilder;
 
     // Biz cookie 60 gun vaxt verdik 60 gun kompda saxliyaciyiq. 
     opt.ExpireTimeSpan = TimeSpan.FromDays(60);
@@ -114,13 +117,13 @@ using (var scope = app.Services.CreateScope())
     await PermissionSeed.Seed(roleManager);
 }
 
-    // Configure the HTTP request pipeline.
-    if (!app.Environment.IsDevelopment())
-    {
-        app.UseExceptionHandler("/Home/Error");
-        // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-        app.UseHsts();
-    }
+// Configure the HTTP request pipeline.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error");
+    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    app.UseHsts();
+}
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();

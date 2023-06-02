@@ -1,14 +1,14 @@
-﻿using AspNetCoreIdentityApp.Web.Models;
-using AspNetCoreIdentityApp.Web.ViewModels;
+﻿using AspNetCoreIdentityApp.Core.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using AspNetCoreIdentityApp.Web.Extensions;
-using AspNetCoreIdentityApp.Web.Services;
+using AspNetCoreIdentityApp.Service.Services;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
+using AspNetCoreIdentityApp.Repository.Models;
 
-namespace AspNetCoreIdentityApp.Web.Controllers
+namespace AspNetCoreIdentityApp.Service.Controllers
 {
     public class HomeController : Controller
     {

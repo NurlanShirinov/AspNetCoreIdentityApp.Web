@@ -1,9 +1,9 @@
-﻿using AspNetCoreIdentityApp.Web.OptionsModels;
+﻿using AspNetCoreIdentityApp.Core.OptionsModels;
 using Microsoft.Extensions.Options;
 using System.Net;
 using System.Net.Mail;
 
-namespace AspNetCoreIdentityApp.Web.Services
+namespace AspNetCoreIdentityApp.Service.Services
 {
     public class EmailService : IEmailService
     {

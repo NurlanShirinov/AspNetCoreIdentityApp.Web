@@ -1,6 +1,5 @@
 ﻿using AspNetCoreIdentityApp.Web.Extensions;
-using AspNetCoreIdentityApp.Web.Models;
-using AspNetCoreIdentityApp.Web.ViewModels;
+using AspNetCoreIdentityApp.Core.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +7,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.FileProviders;
 using System.Collections.Generic;
 using System.Security.Claims;
+using AspNetCoreIdentityApp.Repository.Models;
+using AspNetCoreIdentityApp.Core.Models;
+using AspNetCoreIdentityApp.Service.Services;
 
 namespace AspNetCoreIdentityApp.Web.Controllers
 {
@@ -20,29 +22,24 @@ namespace AspNetCoreIdentityApp.Web.Controllers
         private readonly SignInManager<AppUser> _signInManager;
         private readonly UserManager<AppUser> _userManager;
         private readonly IFileProvider _fileProvider;
+        private readonly IMemberService _memberService;
+        private string userName => User.Identity!.Name!;
 
-        public MemberController(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IFileProvider fileProvider)
+        public MemberController(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IFileProvider fileProvider, IMemberService memberService)
         {
             _signInManager = signInManager;
             _userManager = userManager;
             _fileProvider = fileProvider;
+            _memberService = memberService;
         }
 
         public async Task<IActionResult> Index()
         {
-            var curerentUser = (await _userManager.FindByNameAsync(User.Identity!.Name!))!;
-            var userViewModel = new UserViewModel
-            {
-                UserName = curerentUser!.UserName,
-                Email = curerentUser.Email,
-                PhoneNumber = curerentUser.PhoneNumber,
-                PictureUrl = curerentUser.Picture
-            };
-            return View(userViewModel);
+            return View(await _memberService.GetUserViewModelByUserNameAsync(userName));
         }
         public async Task Logout()
         {
-            await _signInManager.SignOutAsync();
+            await _memberService.LogoutAsync();
         }
 
         public IActionResult PasswordChange()
@@ -58,11 +55,7 @@ namespace AspNetCoreIdentityApp.Web.Controllers
                 return View();
             }
 
-            var currentUser = (await _userManager.FindByNameAsync(User.Identity!.Name!))!;
-
-            var checkOldPassword = await _userManager.CheckPasswordAsync(currentUser, request.PasswordOld);
-
-            if (!checkOldPassword)
+            if (! await _memberService.CheckPasswordAsync(userName, request.PasswordOld))
             {
                 ModelState.AddModelError(string.Empty, "Old Pssword is wrong");
             }
