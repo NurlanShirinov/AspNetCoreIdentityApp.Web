@@ -9,24 +9,20 @@ namespace AspNetCoreIdentityApp.Web.Seeds
         public static async Task Seed(RoleManager<AppRole> roleManager)
         {
             var hasBasicRole = await roleManager.RoleExistsAsync("BasicRole");
-            var hasAdvanceRole = await roleManager.RoleExistsAsync("AdvanceRole");
+            var hasAdvancedRole = await roleManager.RoleExistsAsync("AdvancedRole");
             var hasAdminRole = await roleManager.RoleExistsAsync("AdminRole");
 
             if (!hasBasicRole)
             {
                 await roleManager.CreateAsync(new AppRole() { Name = "BasicRole" });
-
                 var basicRole = (await roleManager.FindByNameAsync("BasicRole"))!;
-
                 await AddReadPermission(basicRole, roleManager);
             }
 
-            if (!hasAdvanceRole)
+            if (!hasAdvancedRole)
             {
-                await roleManager.CreateAsync(new AppRole() { Name = "AdvanceRole" });
-
-                var basicRole = (await roleManager.FindByNameAsync("AdvanceRole"))!;
-
+                await roleManager.CreateAsync(new AppRole() { Name = "AdvancedRole" });
+                var basicRole = (await roleManager.FindByNameAsync("AdvancedRole"))!;
                 await AddReadPermission(basicRole, roleManager);
                 await AddUpdateAndCreatePermission(basicRole, roleManager);
             }
@@ -34,9 +30,7 @@ namespace AspNetCoreIdentityApp.Web.Seeds
             if (!hasAdminRole)
             {
                 await roleManager.CreateAsync(new AppRole() { Name = "AdminRole" });
-
                 var basicRole = (await roleManager.FindByNameAsync("AdminRole"))!;
-
                 await AddReadPermission(basicRole, roleManager);
                 await AddUpdateAndCreatePermission(basicRole, roleManager);
                 await AddDeletePermission(basicRole, roleManager);
@@ -46,9 +40,7 @@ namespace AspNetCoreIdentityApp.Web.Seeds
         public static async Task AddReadPermission(AppRole role, RoleManager<AppRole> roleManager)
         {
             await roleManager.AddClaimAsync(role, new Claim("Permission", PermissionsRoot.Permissions.Stock.Read));
-
             await roleManager.AddClaimAsync(role, new Claim("Permission", PermissionsRoot.Permissions.Order.Read));
-
             await roleManager.AddClaimAsync(role, new Claim("Permission", PermissionsRoot.Permissions.Catalog.Read));
         }
 
@@ -56,9 +48,7 @@ namespace AspNetCoreIdentityApp.Web.Seeds
         public static async Task AddDeletePermission(AppRole role, RoleManager<AppRole> roleManager)
         {
             await roleManager.AddClaimAsync(role, new Claim("Permission", PermissionsRoot.Permissions.Stock.Delete));
-
             await roleManager.AddClaimAsync(role, new Claim("Permission", PermissionsRoot.Permissions.Order.Delete));
-
             await roleManager.AddClaimAsync(role, new Claim("Permission", PermissionsRoot.Permissions.Catalog.Delete));
         }
 
@@ -71,18 +61,11 @@ namespace AspNetCoreIdentityApp.Web.Seeds
 
             await roleManager.AddClaimAsync(role, new Claim("Permission", PermissionsRoot.Permissions.Catalog.Create));
 
-
             await roleManager.AddClaimAsync(role, new Claim("Permission", PermissionsRoot.Permissions.Stock.Update));
 
             await roleManager.AddClaimAsync(role, new Claim("Permission", PermissionsRoot.Permissions.Order.Update));
 
             await roleManager.AddClaimAsync(role, new Claim("Permission", PermissionsRoot.Permissions.Catalog.Update));
         }
-
-
-
-
-
-
     }
 }

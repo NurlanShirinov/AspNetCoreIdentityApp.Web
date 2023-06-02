@@ -59,7 +59,7 @@ builder.Services.AddAuthorization(options =>
 
     options.AddPolicy("ViolencePolicy", policy =>
     {
-        policy.AddRequirements(new ViolenceRequirement() {TresholdAge = 18});
+        policy.AddRequirements(new ViolenceRequirement() { TresholdAge = 18 });
     });
 
     options.AddPolicy("OrderPermissionReadOrDelete", policy =>
@@ -83,7 +83,6 @@ builder.Services.AddAuthorization(options =>
     {
         policy.RequireClaim("permission", Permissions.Stock.Delete);
     });
-
 });
 
 builder.Services.ConfigureApplicationCookie(opt =>
@@ -112,7 +111,7 @@ using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<AppRole>>();
 
-    PermissionSeed.Seed(roleManager);
+    await PermissionSeed.Seed(roleManager);
 }
 
     // Configure the HTTP request pipeline.
