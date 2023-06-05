@@ -32,11 +32,11 @@ namespace AspNetCoreIdentityApp.Web.Controllers
             _fileProvider = fileProvider;
             _memberService = memberService;
         }
-
         public async Task<IActionResult> Index()
         {
             return View(await _memberService.GetUserViewModelByUserNameAsync(userName));
         }
+
         public async Task Logout()
         {
             await _memberService.LogoutAsync();
@@ -60,17 +60,13 @@ namespace AspNetCoreIdentityApp.Web.Controllers
                 ModelState.AddModelError(string.Empty, "Old Pssword is wrong");
             }
 
-            var resultChangePassword = await _userManager.ChangePasswordAsync(currentUser, request.PasswordOld, request.PasswordNew);
+            var (isSucced,errors) = await _memberService.CheckPasswordAsync(userName, request.PasswordOld, request.PasswordNew);
 
-            if (!resultChangePassword.Succeeded)
+            if (!isSucced)
             {
-                ModelState.AddModelErrorList(resultChangePassword.Errors);
+                ModelState.AddModelErrorList(errors);
                 return View();
             }
-
-            await _userManager.UpdateSecurityStampAsync(currentUser); //password deyishdiyi ucun SecuritySamp i update etmeliyik
-            await _signInManager.SignOutAsync(); // Parolu deyishdikden sonra yeniden saxil olmasi ucun signout edirik.
-            await _signInManager.PasswordSignInAsync(currentUser, request.PasswordNew, true, false); //burda ise yeni passwordu daxil olma passwordu teyin edirik.
 
             TempData["SuccessMessage"] = "Password change successfully!";
 
@@ -79,22 +75,8 @@ namespace AspNetCoreIdentityApp.Web.Controllers
 
         public async Task<IActionResult> UserEdit()
         {
-            ViewBag.genderList = new SelectList(Enum.GetNames(typeof(Gender))); //Gender enum dan datalari aliriq
-
-
-            var currentUser = (await _userManager.FindByNameAsync(User.Identity!.Name!))!;
-
-            var userEditViewModel = new UserEditViewModel()
-            {
-                UserName = currentUser.UserName!,
-                Email = currentUser.Email!,
-                Phone = currentUser.PhoneNumber!,
-                BirthDate = currentUser.BirthDate,
-                City = currentUser.City,
-                Gender = currentUser.Gender,
-            };
-
-            return View(userEditViewModel);
+            ViewBag.genderList = _memberService.GetGenderSelectList();
+            return View(await _memberService.GetUserEditViewModelAsync(userName));
         }
 
         [HttpPost]
@@ -105,68 +87,17 @@ namespace AspNetCoreIdentityApp.Web.Controllers
                 return View();
             }
 
-            var currentUser = await _userManager.FindByNameAsync(User.Identity!.Name!);
+            var (isSucces , errors) =  await _memberService.EditUserAsync(request, userName);
 
-            currentUser.UserName = request.UserName;
-            currentUser.Email = request.Email;
-            currentUser.PhoneNumber = request.Phone;
-            currentUser.BirthDate = request.BirthDate;
-            currentUser.City = request.City;
-            currentUser.Gender = request.Gender;
-
-
-            //requestden geleen shekilin null olub olmamasini yoxluyuruq.
-            if (request.Picture != null && request.Picture.Length > 0)
+            if (!isSucces)
             {
-                // fileProvider uzerinden shekli saxlamaq isdediyimiz folderi aliriq.
-                var wwwrootFolder = _fileProvider.GetDirectoryContents("wwwroot");
-
-                //shekli save etmek ucun ina bir random ad veririk ve extension un aliriq. meselen .jpg .png
-                string randomFileName = $"{Guid.NewGuid().ToString()}{Path.GetExtension(request.Picture.FileName)}";
-
-                //wwwroot icerisinden  usepictures folderin aliriq.
-                var newPicturePath = Path.Combine(wwwrootFolder!.First(x => x.Name == "userpictures").PhysicalPath!, randomFileName);
-
-                using var stream = new FileStream(newPicturePath, FileMode.Create); //yeni bir file create edirik
-
-                await request.Picture.CopyToAsync(stream); // requestden gelen shekili stream-a copy edirik.
-                currentUser.Picture = randomFileName;
-
-            }
-
-            var updateToUserResult = await _userManager.UpdateAsync(currentUser);
-
-            if (!updateToUserResult.Succeeded)
-            {
-                ModelState.AddModelErrorList(updateToUserResult.Errors);
+                ModelState.AddModelErrorList(errors!);
                 return View();
-            }
-
-            await _userManager.UpdateSecurityStampAsync(currentUser); //Deyishiklikler oldugu ucun SecurityStamp deyishirik
-            await _signInManager.SignOutAsync();
-
-            if (request.BirthDate.HasValue)
-            {
-                await _signInManager.SignInWithClaimsAsync(currentUser, true, new[] { new Claim("birthdate", currentUser.BirthDate.Value.ToString()) });
-            }
-            else
-            {
-                await _signInManager.SignInAsync(currentUser, true);
             }
 
             TempData["SuccessMessage"] = "User info changed successfully!";
 
-            var userEditViewModel = new UserEditViewModel()
-            {
-                UserName = currentUser.UserName!,
-                Email = currentUser.Email!,
-                Phone = currentUser.PhoneNumber!,
-                BirthDate = currentUser.BirthDate,
-                City = currentUser.City,
-                Gender = currentUser.Gender,
-            };
-
-            return View(userEditViewModel);
+            return View(await _memberService.GetUserEditViewModelAsync(userName));
         }
         public async Task<IActionResult> AccessDenied(string ReturnUrl)
         {
@@ -182,14 +113,7 @@ namespace AspNetCoreIdentityApp.Web.Controllers
         [HttpGet]
         public IActionResult Claims()
         {
-            var userClaimList = User.Claims.Select(x => new ClaimViewModel()
-            {
-                Issuer = x.Issuer,
-                Type = x.Type,
-                Value = x.Value
-            }).ToList();
-
-            return View(userClaimList);
+            return View(_memberService.GetClaims(User));
         }
 
         [Authorize(Policy = "AnkaraPolicy")]
@@ -205,7 +129,6 @@ namespace AspNetCoreIdentityApp.Web.Controllers
         {
             return View();
         }
-
 
 
 
