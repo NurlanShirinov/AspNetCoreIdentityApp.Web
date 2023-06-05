@@ -85,6 +85,15 @@ builder.Services.AddAuthorization(options =>
     });
 });
 
+
+// Third party Authentication for facebook
+builder.Services.AddAuthentication().AddFacebook(opts =>
+{
+    opts.AppId = builder!.Configuration["Authentication:Facebook:AppId"]!;
+    opts.AppSecret = builder!.Configuration["Authentication:Facebook:AppSecret"]!;
+});
+
+
 builder.Services.ConfigureApplicationCookie(opt =>
 {
     // ilk once bir cookie yaradiriq.
