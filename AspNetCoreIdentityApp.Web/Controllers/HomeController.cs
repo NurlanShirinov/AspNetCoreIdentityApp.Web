@@ -191,8 +191,18 @@ namespace AspNetCoreIdentityApp.Web.Controllers
         //Facebook ile login buttonu ucun yazilmish IActionResult
         public IActionResult FacebookLogin(string ReturnUrl)
         {
+            string RedirectUrl = (Url.Action("ExternalResponse", "Home", new { ReturnUrl = ReturnUrl }))!; // RedirectUrl istifadecinin facebook seyfesinde gorduyu ishleri bitirdikden sonra geleceyi seyfesidi.
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties("Google", RedirectUrl); // burda biz tnimlayirik ki hansi providere gedecek. Burda bizim provieder Facebook dur.
+            //ChallengeResult Parametre olarax ne qebul edirse itifadecini ora yonledirir;
+            return new ChallengeResult("Google", properties);
+        }
+
+
+        //Google ile login buttonu ucun yazilmish IActionResult
+        public IActionResult GoogleLogin(string ReturnUrl)
+        {
             string RedirectUrl = (Url.Action("Response", "Home", new { ReturnUrl = ReturnUrl }))!; // RedirectUrl istifadecinin facebook seyfesinde gorduyu ishleri bitirdikden sonra geleceyi seyfesidi.
-            var properties = _signInManager.ConfigureExternalAuthenticationProperties("Facebook", RedirectUrl); // burda biz tnimlayirik ki hansi providere gedecek. Burda bizim provieder Facebook dur.
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties("Google", RedirectUrl); // burda biz tnimlayirik ki hansi providere gedecek. Burda bizim provieder Facebook dur.
             //ChallengeResult Parametre olarax ne qebul edirse itifadecini ora yonledirir;
             return new ChallengeResult("Facebook", properties);
         }
@@ -232,7 +242,6 @@ namespace AspNetCoreIdentityApp.Web.Controllers
             {
                 user.UserName = info.Principal.FindFirst(ClaimTypes.Email)!.Value;
             }
-
 
             // burdan istifadecini save etmeye bashliyiriq
 
