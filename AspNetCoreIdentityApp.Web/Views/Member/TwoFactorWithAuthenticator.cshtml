@@ -1,0 +1,65 @@
+﻿@{
+    ViewData["Title"] = "TwoFactorWithAuthenticator";
+}
+@model AuthenticatorViewModel
+
+@section Scripts
+    {
+    <script type="text/javascript">
+
+        var uri = "@Model.AuthenticatorUri";
+
+        new QRCode(document.getElementById("qrcode"), {
+
+            text: uri,
+            width: 150,
+            height: 150,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+    </script>
+}
+
+<h2>Iki adimli kimlik dogrulama </h2>
+<div action="row">
+
+    <div class="col-md-12">
+
+        <div class="alert alert-info">
+            1.Step. Please scan below WR code with Google/Microsoft Authenticator app.
+        </div>
+
+        <strong class="text-danger">Key : <strong class="text-primary">@Model.SharedKey</strong></strong>
+        <hr />
+
+        <div id="qrcode">
+        </div>
+
+        <div class="alert alert-info mt-3">
+            2.Step : Please enter code below pleace which has been sent to your phone
+        </div>
+
+        <form asp-action="TwoFactorWithAuthenticator" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger">
+            </div>
+
+            <div class="form-group">
+
+                <label asp-for="VerificationCode"></label>
+                <input asp-for="VerificationCode" class="form-control" />
+                <span asp-validation-for="VerificationCode"></span>
+
+                <input type="hidden" asp-for="AuthenticatorUri" />
+                <input type="hidden" asp-for="SharedKey" />
+
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Aktif et" class="btn btn-success mt-2" />
+            </div>
+        </form>
+
+    </div>
+</div>
+

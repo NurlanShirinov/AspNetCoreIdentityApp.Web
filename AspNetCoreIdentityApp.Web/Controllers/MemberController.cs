@@ -1,5 +1,6 @@
 ﻿using AspNetCoreIdentityApp.Web.Extensions;
 using AspNetCoreIdentityApp.Web.Models;
+using AspNetCoreIdentityApp.Web.Models.TwoFactorService;
 using AspNetCoreIdentityApp.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -20,12 +21,14 @@ namespace AspNetCoreIdentityApp.Web.Controllers
         private readonly SignInManager<AppUser> _signInManager;
         private readonly UserManager<AppUser> _userManager;
         private readonly IFileProvider _fileProvider;
+        private readonly TwoFactorService _twoFactorService;
 
-        public MemberController(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IFileProvider fileProvider)
+        public MemberController(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IFileProvider fileProvider, TwoFactorService twoFactorService)
         {
             _signInManager = signInManager;
             _userManager = userManager;
             _fileProvider = fileProvider;
+            _twoFactorService = twoFactorService;
         }
 
         public async Task<IActionResult> Index()
@@ -40,6 +43,7 @@ namespace AspNetCoreIdentityApp.Web.Controllers
             };
             return View(userViewModel);
         }
+
         public async Task Logout()
         {
             await _signInManager.SignOutAsync();
@@ -175,6 +179,7 @@ namespace AspNetCoreIdentityApp.Web.Controllers
 
             return View(userEditViewModel);
         }
+
         public async Task<IActionResult> AccessDenied(string ReturnUrl)
         {
             string message = string.Empty;
@@ -213,9 +218,6 @@ namespace AspNetCoreIdentityApp.Web.Controllers
             return View();
         }
 
-
-
-
         [Authorize(Policy = "ViolencePolicy")]
         [HttpGet]
         public IActionResult ViolencePage()
@@ -223,6 +225,96 @@ namespace AspNetCoreIdentityApp.Web.Controllers
             return View();
         }
 
+        public async Task<IActionResult> TwoFactorWithAuthenticator()
+        {
+            var currentUser = _userManager.FindByNameAsync(User!.Identity!.Name!).Result;
 
+            string unformattedKey = (await _userManager.GetAuthenticatorKeyAsync(currentUser!))!; // Yoxluyuq eger databse de userin key i varmi
+
+            if (string.IsNullOrEmpty(unformattedKey))
+            {
+                await _userManager.ResetAuthenticatorKeyAsync(currentUser!); //Key yoxdursa yaradiriq
+
+                unformattedKey = (await _userManager.GetAuthenticatorKeyAsync(currentUser!))!; // yaradilmish keyi yeniden aliriq.
+            }
+
+            AuthenticatorViewModel authenticatorViewModel = new AuthenticatorViewModel();
+
+            authenticatorViewModel.SharedKey = unformattedKey;
+
+            authenticatorViewModel.AuthenticatorUri = _twoFactorService.GenerateQrCodeUri(currentUser.Email, unformattedKey);
+
+            return View(authenticatorViewModel);
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> TwoFactorWithAuthenticator(AuthenticatorViewModel authenticatorVM)
+        {
+            var verificationCode = authenticatorVM.VerificationCode.Replace(" ", string.Empty).Replace("-", string.Empty);
+
+            var currentUser = _userManager.FindByNameAsync(User!.Identity!.Name!).Result;
+
+            //istifadecinin dogrulama kodunun yoxlanilmasi
+            var is2FaTokenValid = await _userManager.VerifyTwoFactorTokenAsync(currentUser!, _userManager.Options.Tokens.AuthenticatorTokenProvider, verificationCode);
+
+            if (is2FaTokenValid)
+            {
+                currentUser!.TwoFactorEnabled = true;
+                currentUser!.TwoFactor = (sbyte)TwoFactor.MicrosoftGoogle;
+
+                //istifadeciniin telefonu yaninda olmadigi zaman applicationa cata bilmeyeceyi ucun bir dene kurtarici kodlardan istifade ederek girish edecek.
+                var recoveryCodes = await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(currentUser!, 5);
+
+                TempData["recoveryCodes"] = recoveryCodes;
+                TempData["message"] = "Iki adimli kimlik dogrulama tipiniz Microsoft/Google Authenticator olaraq belirlenmishdir.";
+
+                return RedirectToAction("TwoFactorAuth");
+            }
+            else
+            {
+                ModelState.AddModelError("", "Girdiyiniz Dogrulama kodu yanlishdir");
+                return View(authenticatorVM);
+            }
+
+
+            return View();
+        }
+
+
+        public IActionResult TwoFactorAuth()
+        {
+            var currentUser = _userManager.FindByNameAsync(User!.Identity!.Name!).Result;
+
+            return View(new AuthenticatorViewModel() { TwoFactorType = (TwoFactor)currentUser!.TwoFactor });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> TwoFactorAuth(AuthenticatorViewModel authenticatorVM)
+        {
+
+            var currentUser = _userManager.FindByNameAsync(User!.Identity!.Name!).Result;
+
+            switch (authenticatorVM.TwoFactorType)
+            {
+                case TwoFactor.None:
+                    currentUser.TwoFactorEnabled = false;
+                    currentUser.TwoFactor = (sbyte)TwoFactor.None;
+                    TempData["message"] = "Iki adimli kimlik dogrulama tipiniz hicbiri olaraq belirlenmishdir.";
+                    break;
+                case TwoFactor.Phone:
+                    break;
+                case TwoFactor.Email:
+                    break;
+                case TwoFactor.MicrosoftGoogle:
+                    return RedirectToAction("TwoFactorWithAuthenticator");
+                default:
+                    break;
+            }
+
+            await _userManager.UpdateAsync(currentUser!);
+
+            return View(authenticatorVM);
+        }
     }
 }

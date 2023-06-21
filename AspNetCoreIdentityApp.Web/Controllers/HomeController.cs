@@ -63,24 +63,94 @@ namespace AspNetCoreIdentityApp.Web.Controllers
 
             var signInResult = await _signInManager.PasswordSignInAsync(hasUser, model.Password, model.RememberMe, true);
 
+
+            if (hasUser.TwoFactor == (int)TwoFactor.Email || hasUser.TwoFactor == (int)TwoFactor.Phone)
+                HttpContext.Session.Remove("currentTime");
+
+            if (signInResult.RequiresTwoFactor)
+                return RedirectToAction("TwoFactorLogin");
+
             if (signInResult.IsLockedOut)
             {
-                ModelState.AddModelErrorList(new List<string>() { "3 dakika boyunca girish yapamazsiniz" });
+                ModelState.AddModelErrorList(new List<string>() { "3 dakika boyunca giriş yapamazsınız." });
                 return View();
             }
 
             if (!signInResult.Succeeded)
             {
-                ModelState.AddModelErrorList(new List<string>() { $"Email veya shifre yanlish", $"Basharisiz girish sayisi = {await _UserManager.GetAccessFailedCountAsync(hasUser)}" });
+                ModelState.AddModelErrorList(new List<string>() { $"Email veya şifre yanlış", $"Başarısız giriş sayısı = {await _UserManager.GetAccessFailedCountAsync(hasUser)}" });
                 return View();
             }
 
             if (hasUser.BirthDate.HasValue)
             {
+                //User Claim-larla beraber cookisini yaradir. Login olmax cookie yaratmaq demekdir.
                 await _signInManager.SignInWithClaimsAsync(hasUser, model.RememberMe, new[] { new Claim("birthdate", hasUser.BirthDate.Value.ToString()) });
             }
+
             return Redirect(returnUrl!);
         }
+
+        public async Task<IActionResult> TwoFactorLogin(string ReturnUri = "/")
+        {
+            //Bu method ilk once Identity.TwoFactorUserId adli cookie-den gedin user id-ni tapir.
+            //daha sonra databasaya gedir bu userId-ye sahib userin melumatlarin tapib getirir.
+            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
+
+            TempData["ReturnUri"] = ReturnUri;
+
+            switch ((TwoFactor)user!.TwoFactor!)
+            {
+                case TwoFactor.MicrosoftGoogle:
+                    break;
+            }
+
+            return View(new TwoFactorLoginViewModel() {TwoFactorType=(TwoFactor)user.TwoFactor, IsRecoverCode=false, IsRememberMe=false, VerificationCode=string.Empty });
+
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> TwoFactorLogin(TwoFactorLoginViewModel twoFactorLoginViewModel)
+        {
+            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
+
+            ModelState.Clear();
+
+            bool isSuccessAuth = false;
+
+            if((TwoFactor)user!.TwoFactor! == TwoFactor.MicrosoftGoogle)
+            {
+                Microsoft.AspNetCore.Identity.SignInResult result;
+
+                if (twoFactorLoginViewModel.IsRecoverCode)
+                {
+                    result = await _signInManager.TwoFactorRecoveryCodeSignInAsync(twoFactorLoginViewModel.VerificationCode);
+                }
+                else
+                {
+                    result = await _signInManager.TwoFactorAuthenticatorSignInAsync(twoFactorLoginViewModel.VerificationCode, twoFactorLoginViewModel.IsRememberMe, false);
+                }
+                if (result.Succeeded)
+                {
+                    isSuccessAuth = true;
+                }
+                else
+                {
+                    ModelState.AddModelError("", "Dogrulama kodu yanlishdir");
+                }
+            };
+
+            if (isSuccessAuth)
+            {
+                return Redirect(TempData["ReturnUri"]!.ToString()!);
+            }
+
+            twoFactorLoginViewModel.TwoFactorType = (TwoFactor)user.TwoFactor;
+
+            return View(twoFactorLoginViewModel);
+        }
+
 
         [HttpPost]
         public async Task<IActionResult> SignUp(SignUpViewModel request)
@@ -90,7 +160,13 @@ namespace AspNetCoreIdentityApp.Web.Controllers
                 return View();
             }
 
-            var identityResult = await _UserManager.CreateAsync(new() { UserName = request.UserName, PhoneNumber = request.Phone, Email = request.Email }, request.PasswordConfirm);
+            var identityResult = await _UserManager.CreateAsync(new()
+            {
+                UserName = request.UserName,
+                PhoneNumber = request.Phone,
+                Email = request.Email,
+                TwoFactor = 0
+            }, request.PasswordConfirm);
 
             if (!identityResult.Succeeded)
             {
@@ -146,7 +222,6 @@ namespace AspNetCoreIdentityApp.Web.Controllers
             return View();
         }
 
-
         [HttpPost]
         public async Task<IActionResult> ResetPassword(ResetPasswordViewModel request)
         {
@@ -180,13 +255,11 @@ namespace AspNetCoreIdentityApp.Web.Controllers
             return View();
         }
 
-
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
-
 
         //Facebook ile login buttonu ucun yazilmish IActionResult
         public IActionResult FacebookLogin(string ReturnUrl)
@@ -197,16 +270,14 @@ namespace AspNetCoreIdentityApp.Web.Controllers
             return new ChallengeResult("Google", properties);
         }
 
-
         //Google ile login buttonu ucun yazilmish IActionResult
         public IActionResult GoogleLogin(string ReturnUrl)
         {
-            string RedirectUrl = (Url.Action("Response", "Home", new { ReturnUrl = ReturnUrl }))!; // RedirectUrl istifadecinin facebook seyfesinde gorduyu ishleri bitirdikden sonra geleceyi seyfesidi.
+            string RedirectUrl = (Url.Action("ExternalResponse", "Home", new { ReturnUrl = ReturnUrl }))!; // RedirectUrl istifadecinin facebook seyfesinde gorduyu ishleri bitirdikden sonra geleceyi seyfesidi.
             var properties = _signInManager.ConfigureExternalAuthenticationProperties("Google", RedirectUrl); // burda biz tnimlayirik ki hansi providere gedecek. Burda bizim provieder Facebook dur.
             //ChallengeResult Parametre olarax ne qebul edirse itifadecini ora yonledirir;
             return new ChallengeResult("Facebook", properties);
         }
-
 
         public async Task<IActionResult> ExternalResponse(string ReturnUrl = "/")
         {

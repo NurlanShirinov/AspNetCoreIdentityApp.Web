@@ -1,6 +1,7 @@
 using AspNetCoreIdentityApp.Web.ClaimProvider;
 using AspNetCoreIdentityApp.Web.Extensions;
 using AspNetCoreIdentityApp.Web.Models;
+using AspNetCoreIdentityApp.Web.Models.TwoFactorService;
 using AspNetCoreIdentityApp.Web.OptionsModels;
 using AspNetCoreIdentityApp.Web.PermissionsRoot;
 using AspNetCoreIdentityApp.Web.Requirements;
@@ -41,6 +42,7 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IClaimsTransformation, UserClaimProvider>();
 builder.Services.AddScoped<IAuthorizationHandler, ExchangeExpireRequirementHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, ViolenceRequirementHandler>();
+builder.Services.AddScoped<TwoFactorService>();
 
 
 //Claim based Authorization Policy uzerinden aparilir. Policyler ashagidaki kimi add olunur.
@@ -87,16 +89,17 @@ builder.Services.AddAuthorization(options =>
 
 
 // Third party Authentication for facebook
-builder.Services.AddAuthentication().AddFacebook(opts =>
-{
-    opts.AppId = builder!.Configuration["Authentication:Facebook:AppId"]!;
-    opts.AppSecret = builder!.Configuration["Authentication:Facebook:AppSecret"]!;
-}).AddGoogle(opts =>
-{
-    opts.ClientId = builder!.Configuration["Authentication:Google:ClientID"]!;
-    opts.ClientSecret = builder!.Configuration["Authentication:Google:ClientSecret"]!;
-});
-
+//builder.Services.AddAuthentication()
+//    .AddFacebook(opts =>
+//{
+//    opts.AppId = builder!.Configuration["Authentication:Facebook:AppId"]!;
+//    opts.AppSecret = builder!.Configuration["Authentication:Facebook:AppSecret"]!;
+//})
+//    .AddGoogle(opts =>
+//{
+//    opts.ClientId = builder!.Configuration["Authentication:Google:ClientID"]!;
+//    opts.ClientSecret = builder!.Configuration["Authentication:Google:ClientSecret"]!;
+//});
 
 builder.Services.ConfigureApplicationCookie(opt =>
 {
